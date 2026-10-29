@@ -5,6 +5,9 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Text;
 
+[assembly: AssemblyVersion("APP_VERSION.0")]
+[assembly: AssemblyFileVersion("APP_VERSION.0")]
+
 class Launcher
 {
     // Wird beim Build durch den SHA-256 des eingebetteten Archivs ersetzt.
@@ -34,6 +37,8 @@ class Launcher
         try
         {
             string root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Console.WriteLine("WhatsApp-Backup APP_VERSION");
+            Console.WriteLine("Sicherungen: " + Path.Combine(root, "backup"));
             string app = Path.Combine(root, "WhatsApp-Backup-Dateien", BuildId);
             // Verhindert paralleles Entpacken desselben Pakets.
             string mutexId;

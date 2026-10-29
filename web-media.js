@@ -13,7 +13,7 @@ function errorInfo(error) {
     // Keine signierten Download-URLs, Schlüssel oder langen Hashwerte protokollieren.
     reason = String(reason).replace(/https?:\/\/\S+/gi, '[URL]')
         .replace(/[A-Za-z0-9+/_=-]{40,}/g, '[gekürzt]').slice(0, 240);
-    return { status, reason };
+    return { status, reason, ...(error && error.stage ? { stage: error.stage } : {}) };
 }
 
 // Der normale Bibliotheksabruf setzt ein noch vorhandenes Live-Message-Modell
@@ -46,13 +46,14 @@ async function downloadFromSnapshot(client, msg) {
             data = readMetadata();
         }
         if (!data.directPath || !data.mediaKey) {
-            return { error: { status: null, reason: 'Downloadpfad oder Medienschlüssel nicht verfügbar' } };
+            return { error: { status: null, stage: 'metadata', reason: 'Downloadpfad oder Medienschlüssel nicht verfügbar' } };
         }
         try {
             const qpl = { addAnnotations() { return this; }, addPoint() { return this; } };
             const bytes = await window.require('WAWebDownloadManager').downloadManager.downloadAndMaybeDecrypt({
                 directPath: data.directPath, encFilehash: data.encFilehash, filehash: data.filehash,
                 mediaKey: data.mediaKey, mediaKeyTimestamp: data.mediaKeyTimestamp, type: data.type,
+                mimetype: data.mimetype,
                 signal: new AbortController().signal, downloadQpl: qpl
             });
             return {
@@ -60,14 +61,18 @@ async function downloadFromSnapshot(client, msg) {
                 mimetype: data.mimetype, filename: data.filename, filesize: data.size
             };
         } catch (e) {
-            // Rohfehler können signierte URLs enthalten. Nur Status und Fehlertyp zurückgeben.
-            return { error: { status: Number(e.status) || null,
-                reason: 'WhatsApp-Medienabruf fehlgeschlagen (' + (e.name || 'Error') + ')' } };
+            // Die Ursache erhalten, aber URLs, Schlüssel und lange Hashwerte redigieren.
+            const reason = String(e.message || e.name || e || 'Unbekannter Fehler')
+                .replace(/https?:\/\/\S+/gi, '[URL]')
+                .replace(/[A-Za-z0-9+/_=-]{40,}/g, '[gekürzt]').slice(0, 240);
+            return { error: { status: Number(e.status) || null, stage: 'download-decrypt',
+                reason: 'WhatsApp-Medienabruf: ' + reason } };
         }
     }, id, snapshot));
     if (result && result.error) {
         const error = new Error(result.error.reason);
         error.status = result.error.status;
+        error.stage = result.error.stage;
         throw error;
     }
     return result;
@@ -98,6 +103,7 @@ async function downloadWebMedia(client, msg, options = {}) {
     const info = errorInfo(lastError);
     const error = new Error(info.reason);
     error.status = info.status;
+    error.stage = info.stage;
     throw error;
 }
 

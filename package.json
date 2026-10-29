@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-backup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lokales Backup aller WhatsApp-Chats inkl. Medien über WhatsApp Web",
   "main": "backup.js",
   "scripts": {

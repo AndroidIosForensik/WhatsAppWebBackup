@@ -7,6 +7,9 @@ Sichert alle WhatsApp-Chats inklusive Mediendateien lokal auf diesen Rechner.
 **[Windows-EXE herunterladen](https://github.com/AndroidIosForensik/WhatsAppWebBackup/releases/latest)**
 – anschließend `WhatsApp-Backup.exe` in einem beschreibbaren Ordner starten.
 
+**Version 1.0.1:** behebt den fehlenden MIME-Dateityp beim Medienabruf
+(`InvalidMediaFileType`). Beim EXE-Start werden Version und Sicherungsordner angezeigt.
+
 **Als Windows-EXE:** `dist/WhatsApp-Backup.exe` doppelklicken. Node.js, die
 Programmpakete und Chrome sind enthalten; eine Node.js-Installation ist nicht nötig.
 Beim ersten Start entpackt sich das Programm neben die EXE in
@@ -125,6 +128,8 @@ Nachrichtenmodell im Browser nicht mehr verfügbar ist, nutzt das Tool die
 zwischengespeicherten Download-/Entschlüsselungsmetadaten. Vorübergehende Fehler
 werden bis zu dreimal versucht. Fehlende Dateien erscheinen mit Begründung in
 `media-fehler.json` und beim jeweiligen Eintrag in `messages.json`.
+Der Abruf übergibt dabei den tatsächlichen MIME-Typ (z. B. `image/jpeg`) an
+WhatsApp; ohne dieses Feld können neuere WhatsApp-Versionen gültige Medien ablehnen.
 
 ### Chats auswählen (Auswahlfenster)
 

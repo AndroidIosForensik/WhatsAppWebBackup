@@ -33,7 +33,8 @@ try {
     }
 } finally { $zip.Dispose(); $stream.Dispose() }
 $hash = (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash.ToLowerInvariant()
-$source = [IO.File]::ReadAllText((Join-Path $projectRoot 'windows\Launcher.cs')).Replace('PAYLOAD_BUILD_ID', $hash.Substring(0, 16))
+$version = (Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json).version
+$source = [IO.File]::ReadAllText((Join-Path $projectRoot 'windows\Launcher.cs')).Replace('PAYLOAD_BUILD_ID', $hash.Substring(0, 16)).Replace('APP_VERSION', $version)
 $generated = Join-Path $buildDir 'Launcher.cs'
 [IO.File]::WriteAllText($generated, $source, [Text.UTF8Encoding]::new($false))
 $output = Join-Path $distDir 'WhatsApp-Backup.exe'

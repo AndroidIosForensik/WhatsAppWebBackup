@@ -112,9 +112,13 @@ Der Bericht wird durch das Prüfsummen-Manifest mit abgesichert.
    alternativ der WhatsApp-DownloadManager mit den im Schnappschuss erhaltenen
    Download-/Entschlüsselungsmetadaten aufgerufen. Die Entschlüsselung erfolgt
    weiterhin im Browser. Medientypen werden auch ohne `hasMedia`-Flag erkannt.
+   Seit Version 1.0.1 wird `mimetype` ausdrücklich an `downloadAndMaybeDecrypt`
+   übergeben, um den bei neueren WhatsApp-Versionen dokumentierten Fehler
+   `InvalidMediaFileType` zu vermeiden (wwebjs/whatsapp-web.js#201908).
    Vorübergehende Fehler werden bis zu dreimal versucht; HTTP 404/410 gelten als
    nicht verfügbare Serverdatei. Fehler werden ohne Schlüssel oder signierte URLs
-   in `media-fehler.json` und im jeweiligen Datensatz (`mediaError`) protokolliert.
+   in `media-fehler.json` und im jeweiligen Datensatz (`mediaError`) protokolliert,
+   einschließlich der Phase (`metadata` bzw. `download-decrypt`).
    Ablage erfolgreicher Downloads als
    `JJJJ-MM-TT_<NachrichtenID>.<endung>`. Vorhandene Dateien werden
    übersprungen, abgelaufene als „nicht verfügbar" gezählt.

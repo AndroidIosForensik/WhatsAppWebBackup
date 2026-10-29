@@ -1,7 +1,9 @@
+param([string]$OutputDirectory = 'dist')
+
 $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
 $buildDir = Join-Path $projectRoot 'build'
-$distDir = Join-Path $projectRoot 'dist'
+$distDir = if ([IO.Path]::IsPathRooted($OutputDirectory)) { $OutputDirectory } else { Join-Path $projectRoot $OutputDirectory }
 New-Item -ItemType Directory -Force -Path $buildDir, $distDir | Out-Null
 $nodeExe = Join-Path $projectRoot 'runtime\node.exe'
 if (-not (Test-Path -LiteralPath $nodeExe)) { $nodeExe = (Get-Command node.exe).Source }
@@ -19,7 +21,7 @@ function Add-PayloadFile([string]$Source, [string]$Target) {
 }
 try {
     # Ausschließlich Programmdateien: keine Backups, Sitzungen oder Cache-Dateien.
-    $scripts = @('menu.js', 'backup.js', 'usb-backup.js', 'usb-decrypt.js', 'usb-contacts.js', 'usb-wal.js', 'web-dependencies.js', 'web-history.js', 'exe-self-test.js', 'DOKUMENTATION.md', 'README.md', 'package.json', 'package-lock.json')
+    $scripts = @('menu.js', 'backup.js', 'usb-backup.js', 'usb-decrypt.js', 'usb-contacts.js', 'usb-wal.js', 'web-dependencies.js', 'web-history.js', 'web-media.js', 'exe-self-test.js', 'DOKUMENTATION.md', 'README.md', 'package.json', 'package-lock.json')
     foreach ($name in $scripts) { Add-PayloadFile (Join-Path $projectRoot $name) $name }
     Add-PayloadFile $nodeExe 'runtime/node.exe'
     Add-PayloadFile (Join-Path $projectRoot 'runtime\LICENSE') 'runtime/LICENSE'

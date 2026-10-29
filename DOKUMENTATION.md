@@ -18,6 +18,7 @@ Es gibt zwei Backup-Quellen mit identischem Ausgabeformat:
 | `usb-wal.js` | wertet das Write-Ahead-Log der Live-Datenbanken aus und schreibt `wal-bericht.html/.json` |
 | `backup.js` | Steuerprogramm (Web-Backup) + Ausgabe-Funktionen |
 | `web-history.js` | öffnet Chats, scrollt zurück, wiederholt das Nachladen und hält Nachrichtenschnappschüsse bis zum Export vor |
+| `web-media.js` | lädt Medien mit Snapshot-Fallback, Wiederholungen und Fehlerdiagnose |
 | `build-exe.ps1` / `windows/Launcher.cs` | erstellt eine EXE mit Node.js, Paketen und Chrome; entpackt Programmdateien beim ersten Start |
 | whatsapp-web.js | steuert WhatsApp Web, liest dessen interne Datenmodelle |
 | Puppeteer + Chrome | startet den Browser, in dem WhatsApp Web läuft |
@@ -106,7 +107,15 @@ Der Bericht wird durch das Prüfsummen-Manifest mit abgesichert.
    Sondertypen: `call_log` → Video/Dauer/verpasst (+ Rohfelder in
    `call.raw`); `vcard` → Name/Telefonnummern aus dem vCard-Text;
    `gp2` → Untertyp, Auslöser, Betroffene.
-5. Medien: `downloadMedia()` (Entschlüsselung im Browser), Ablage als
+5. Medien: `web-media.js` versucht zuerst `downloadMedia()` der Bibliothek.
+   Fehlt nach der Ladephase das Live-Modell oder dessen `mediaData`, wird
+   alternativ der WhatsApp-DownloadManager mit den im Schnappschuss erhaltenen
+   Download-/Entschlüsselungsmetadaten aufgerufen. Die Entschlüsselung erfolgt
+   weiterhin im Browser. Medientypen werden auch ohne `hasMedia`-Flag erkannt.
+   Vorübergehende Fehler werden bis zu dreimal versucht; HTTP 404/410 gelten als
+   nicht verfügbare Serverdatei. Fehler werden ohne Schlüssel oder signierte URLs
+   in `media-fehler.json` und im jeweiligen Datensatz (`mediaError`) protokolliert.
+   Ablage erfolgreicher Downloads als
    `JJJJ-MM-TT_<NachrichtenID>.<endung>`. Vorhandene Dateien werden
    übersprungen, abgelaufene als „nicht verfügbar" gezählt.
 6. Ausgabe: `messages.json` (chronologisch) und `chat.html`

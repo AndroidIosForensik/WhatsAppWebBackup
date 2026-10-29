@@ -1568,7 +1568,8 @@ async function backupChat(client, chat, usedDirs, nameCache, onProgress, prepare
     }
     await resolveNames(client, idsToResolve.filter(Boolean), nameCache);
 
-    const mediaTotal = messages.filter((m) => m.hasMedia).length;
+    const { isMediaMessage, downloadWebMedia, errorInfo } = require('./web-media');
+    const mediaTotal = messages.filter(isMediaMessage).length;
     const records = [];
     let mediaCount = 0;
     let mediaFailed = 0;
@@ -1590,7 +1591,7 @@ async function backupChat(client, chat, usedDirs, nameCache, onProgress, prepare
             senderName: displaySender(msg, senderId, chat, nameCache),
             type: msg.type,
             body: msg.body || '',
-            hasMedia: msg.hasMedia,
+            hasMedia: isMediaMessage(msg),
             mediaFile: null,
             mediaMimetype: null
         };
@@ -1600,7 +1601,7 @@ async function backupChat(client, chat, usedDirs, nameCache, onProgress, prepare
         if (msg.type === 'vcard' || msg.type === 'multi_vcard') rec.contacts = extractContacts(msg);
         if (msg.type === 'gp2') rec.group = extractGroupEvent(msg, nameCache);
 
-        if (msg.hasMedia) {
+        if (rec.hasMedia) {
             mediaSeen++;
             if (onProgress) onProgress({ messages: records.length, mediaSeen, mediaTotal, mediaDone: mediaCount });
             const baseName = `${new Date(msg.timestamp * 1000).toISOString().slice(0, 10)}_${msg.id.id}`;
@@ -1612,7 +1613,7 @@ async function backupChat(client, chat, usedDirs, nameCache, onProgress, prepare
                 mediaCount++;
             } else {
                 try {
-                    const media = await msg.downloadMedia();
+                    const media = await downloadWebMedia(client, msg);
                     if (media && media.data) {
                         const ext = extForMime(media.mimetype, media.filename);
                         const fileName = `${baseName}.${ext}`;
@@ -1622,9 +1623,14 @@ async function backupChat(client, chat, usedDirs, nameCache, onProgress, prepare
                         mediaCount++;
                     } else {
                         mediaFailed++;
+                        rec.mediaError = { status: null, reason: 'Leere Mediendatei erhalten' };
                     }
                 } catch (err) {
                     mediaFailed++;
+                    rec.mediaError = errorInfo(err);
+                    clearStatus();
+                    console.warn(`Medium ${rec.id}: ${rec.mediaError.reason}`
+                        + (rec.mediaError.status ? ` (HTTP ${rec.mediaError.status})` : ''));
                 }
             }
         }
@@ -1842,6 +1848,13 @@ async function runBackup(client) {
         const totalMsg = summary.reduce((s, e) => s + e.messages, 0);
         const totalMedia = summary.reduce((s, e) => s + e.media, 0);
         const totalGroups = summary.filter((e) => e.isGroup).length;
+        const mediaErrors = summary.flatMap((entry) => entry.records.filter((r) => r.mediaError)
+            .map((r) => ({ chat: entry.dir,
+                messageId: r.id, type: r.type, ...r.mediaError })));
+        if (mediaErrors.length) {
+            fs.writeFileSync(path.join(OUTPUT_DIR, 'media-fehler.json'), JSON.stringify(mediaErrors, null, 2));
+            console.warn(`${mediaErrors.length} Medien fehlen. Gründe stehen in media-fehler.json und messages.json.`);
+        }
         console.log(`\n${progressBar(1)} 100%`);
         console.log(`Fertig: ${summary.length} Chats (davon ${totalGroups} Gruppen), `
             + `${totalMsg} Nachrichten, ${totalMedia} Mediendateien.`);
@@ -2005,5 +2018,5 @@ module.exports = {
     writeDocumentationHtml, writeManifest, verifyBackup,
     setOutputDir: (d) => { OUTPUT_DIR = d; },
     setBackupId: (id) => { BACKUP_ID = id; },
-    _test: { parseSelection, selectChats, buildSelectGuiHtml, specialBubbleHtml, messagePlain, parseVcard, groupEventText, writeManifest, verifyBackup, markdownToHtml, writeDocumentationHtml, writeEvidenceHtml, setBackupId: (id) => { BACKUP_ID = id; } }
+    _test: { backupChat, parseSelection, selectChats, buildSelectGuiHtml, specialBubbleHtml, messagePlain, parseVcard, groupEventText, writeManifest, verifyBackup, markdownToHtml, writeDocumentationHtml, writeEvidenceHtml, setBackupId: (id) => { BACKUP_ID = id; } }
 };

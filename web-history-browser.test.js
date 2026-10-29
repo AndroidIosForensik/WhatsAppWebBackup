@@ -10,11 +10,11 @@ test('Browseradapter scrollt und sammelt ältere Nachrichten ohne Duplikatverlus
         await page.setContent('<div id="main"><div style="height:200px;overflow-y:auto"><div style="height:900px">Verlauf</div></div></div>');
         await page.evaluate(() => {
             document.querySelector('#main > div').scrollTop = 200;
-            const newer = { id: { _serialized: 'new' }, t: 20 };
+            const newer = { id: { _serialized: 'new' }, t: 20, directPath: '/test.enc', mediaKey: 'test-key' };
             const older = { id: { _serialized: 'old' }, t: 10 };
             let models = [newer];
             const chat = { msgs: { getModelsArray: () => models, msgLoadState: { noEarlierMsgs: false } } };
-            window.WWebJS = { getChat: async () => chat, getMessageModel: (m) => m };
+            window.WWebJS = { getChat: async () => chat, getMessageModel: (m) => ({ id: m.id, t: m.t }) };
             window.require = () => ({ loadEarlierMsgs: async () => {
                 models = [older, { isNotification: true }];
                 chat.msgs.msgLoadState.noEarlierMsgs = true;
@@ -24,6 +24,8 @@ test('Browseradapter scrollt und sammelt ältere Nachrichten ohne Duplikatverlus
         const batch = await readHistoryBatch({ pupPage: page }, 'chat', true);
         assert.equal(batch.noEarlier, true);
         assert.deepEqual([...new Set(batch.messages.map((m) => m.id._serialized))], ['new', 'old']);
+        assert.equal(batch.messages[0].directPath, '/test.enc');
+        assert.equal(batch.messages[0].mediaKey, 'test-key');
         assert.equal(await page.evaluate(() => document.querySelector('#main > div').scrollTop), 0);
     } finally { await browser.close(); }
 });

@@ -7,6 +7,7 @@ async function main() {
     require('./backup');
     require('./usb-backup');
     require('./web-history');
+    require('./web-media');
     require('qrcode-terminal');
     require('whatsapp-web.js');
     assert.ok(fs.existsSync(path.join(__dirname, 'DOKUMENTATION.md')));

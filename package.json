@@ -5,7 +5,7 @@
   "main": "backup.js",
   "scripts": {
     "start": "node backup.js",
-    "test": "node --test web-history.test.js web-history-browser.test.js usb-contacts.test.js usb-decrypt.test.js usb-live.test.js usb-system.test.js",
+    "test": "node --test web-history.test.js web-history-browser.test.js web-media.test.js web-media-browser.test.js usb-contacts.test.js usb-decrypt.test.js usb-live.test.js usb-system.test.js",
     "build:exe": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-exe.ps1"
   },
   "dependencies": {

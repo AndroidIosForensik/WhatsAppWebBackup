@@ -120,6 +120,12 @@ Chats kann deren Lesestatus in WhatsApp verändern.
 Ein Ladefehler oder ein einzelner Ladeschritt über 60 Sekunden bricht den Lauf
 vor dem Export ab. Temporäre Nachrichtenkopien werden anschließend entfernt.
 
+Medien werden nach der Ladephase heruntergeladen. Wenn das ursprüngliche
+Nachrichtenmodell im Browser nicht mehr verfügbar ist, nutzt das Tool die
+zwischengespeicherten Download-/Entschlüsselungsmetadaten. Vorübergehende Fehler
+werden bis zu dreimal versucht. Fehlende Dateien erscheinen mit Begründung in
+`media-fehler.json` und beim jeweiligen Eintrag in `messages.json`.
+
 ### Chats auswählen (Auswahlfenster)
 
 Nach der Anmeldung erscheint eine anklickbare Liste aller Chats:

@@ -21,8 +21,16 @@ async function withTimeout(operation, ms = 60000) {
 async function readHistoryBatch(client, chatId, load) {
     return withTimeout(() => client.pupPage.evaluate(async (id, loadEarlier) => {
         const chat = await window.WWebJS.getChat(id, { getAsModel: false });
-        const collect = (models) => models.filter((m) => !m.isNotification)
-            .map((m) => window.WWebJS.getMessageModel(m));
+        const collect = (models) => models.filter((m) => !m.isNotification).map((m) => {
+            const raw = window.WWebJS.getMessageModel(m);
+            // Einige WhatsApp-Versionen lassen Felder im serialisierten Modell weg.
+            // Für den späteren Medienabruf die vorhandenen Live-Metadaten mitnehmen.
+            for (const key of ['directPath', 'encFilehash', 'filehash', 'mediaKey',
+                'mediaKeyTimestamp', 'mimetype', 'filename', 'size']) {
+                if (raw[key] == null && m[key] != null) raw[key] = m[key];
+            }
+            return raw;
+        });
         const before = collect(chat.msgs.getModelsArray());
         let loaded = [];
         if (loadEarlier) {

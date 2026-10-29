@@ -1,0 +1,13 @@
+node_modules/
+.wwebjs_auth/
+.wwebjs_cache/
+backup/
+runtime/
+node.exe
+build/
+dist/
+.claude/
+.codex/
+.agents/
+.env
+.env.*

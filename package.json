@@ -1,0 +1,15 @@
+{
+  "name": "whatsapp-backup",
+  "version": "1.0.0",
+  "description": "Lokales Backup aller WhatsApp-Chats inkl. Medien über WhatsApp Web",
+  "main": "backup.js",
+  "scripts": {
+    "start": "node backup.js",
+    "test": "node --test web-history.test.js web-history-browser.test.js usb-contacts.test.js usb-decrypt.test.js usb-live.test.js usb-system.test.js",
+    "build:exe": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-exe.ps1"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.7"
+  }
+}
